@@ -1,11 +1,16 @@
 package com.example.skosko.ballsgame;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.RectF;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -14,25 +19,33 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity implements SensorEventListener {
     private int width;
     private int height;
     float degs = 0;
-    float movment = 1;
+    float movment = (float)0.5;
     Canvas canvas;
     ImageView gameview;
     Bitmap bitmap;
+    Bitmap bitmapbackground;
+    Paint bluesky;
+    Paint greenplanet;
+    Paint characterPaint;
+    Paint EnemyPaint;
+    RectF planet;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_game);
 
-
+// SET WINDOW
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -49,6 +62,29 @@ public class GameActivity extends AppCompatActivity {
             }
         }
 
+//// SET PAINTS
+        bluesky = new Paint();
+        bluesky.setColor(Color.BLUE);
+        bluesky.setStyle(Paint.Style.FILL_AND_STROKE);
+
+        greenplanet = new Paint();
+        greenplanet.setColor(Color.GREEN);
+        greenplanet.setStyle(Paint.Style.FILL_AND_STROKE);
+
+        characterPaint = new Paint();
+        characterPaint.setColor(Color.RED);
+        characterPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+
+        EnemyPaint = new Paint();
+        EnemyPaint.setColor(Color.CYAN);
+        EnemyPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+
+        // Make static items
+
+
+
+
+// get display size
 
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
@@ -56,7 +92,17 @@ public class GameActivity extends AppCompatActivity {
         width = size.x + 150;
         height = size.y;
 
-        bitmap = Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
+
+// fill location list on planet
+
+//        for(int i = 0 ; i < 180 ; i++){
+//            Cords cords = getCordsOndeg(planet,i);
+//            planetcordlist.add(cords);
+//        }
+
+// MAKE GAME VIEW
+
+
 
         ImageView newView = new ImageView(this);
         newView.setX(0);
@@ -68,12 +114,51 @@ public class GameActivity extends AppCompatActivity {
         //gameview = (ImageView) findViewById(R.id.imageViewGame);
         setContentView(gameview);
 
+
+        // Draw empty field
+        //bitmap = Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
+//        canvas = new Canvas(bitmap);
+//        canvas.drawRect(0,0,width,height,bluesky);
+//        planet = new RectF(0,height/2,width,height/2+width);
+//        canvas.drawArc(planet,180,180,true,greenplanet);
+
+        bitmapbackground = Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
+        Canvas canvas2 = new Canvas(bitmapbackground);
+        canvas2.drawRect(0,0,width,height,bluesky);
+        planet = new RectF(0,height/2,width,height/2+width);
+        canvas2.drawArc(planet,180,180,true,greenplanet);
+
+
+        // START TIMER
+
         Timer timer = new Timer();
-        final int FPS = 24;
+        final int FPS = 30;
         TimerTask updateBall = new UpdateScreenTask();
         timer.scheduleAtFixedRate(updateBall, 0, 1000/FPS);
 
+        SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        Sensor vatupassisensor = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+        if (vatupassisensor == null) {
+            // ei kiihtyvyysanturia
+            Toast.makeText(this, "Paskaks män", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
+        sensorManager.registerListener(this,vatupassisensor, SensorManager.SENSOR_DELAY_NORMAL);
+
+
+
+
+
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
 
@@ -96,42 +181,25 @@ public class GameActivity extends AppCompatActivity {
 
     void drawMap(){
 
+        bitmap = Bitmap.createBitmap(bitmapbackground);
+        //bitmap = Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
         canvas = new Canvas(bitmap);
-
-        Paint bluesky = new Paint();
-        bluesky.setColor(Color.BLUE);
-        bluesky.setStyle(Paint.Style.FILL_AND_STROKE);
-
-        Paint greenplanet = new Paint();
-        greenplanet.setColor(Color.GREEN);
-        greenplanet.setStyle(Paint.Style.FILL_AND_STROKE);
-
-        Paint characterPaint = new Paint();
-        characterPaint.setColor(Color.RED);
-        characterPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-
-        Paint EnemyPaint = new Paint();
-        EnemyPaint.setColor(Color.CYAN);
-        EnemyPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        //canvas.setBitmap(bitmapbackground);
 
 
-
-        RectF planet = new RectF(0,height/2,width,height/2+width);
-
-        canvas.drawRect(0,0,width,height,bluesky);
-
-
-        canvas.drawArc(planet,180,180,true,greenplanet);
-
-        canvas.drawCircle(width/2,height/2,50,characterPaint);
+        canvas.drawCircle(width/2,height/2,50,characterPaint); // player
 
         Cords cords = getCordsOndeg(planet,degs);
 
-        canvas.drawRect(cords.x-50,cords.y-50,cords.x+50,cords.y+50,EnemyPaint);
+        canvas.drawRect(cords.x-50,cords.y-50,cords.x+50,cords.y+50,EnemyPaint); // enemy
 
 
+        drawstuff();
 
 
+    }
+
+    void drawstuff(){
 
         GameActivity.this.runOnUiThread(new Runnable() {
             @Override
@@ -141,11 +209,6 @@ public class GameActivity extends AppCompatActivity {
                 gameview.setImageBitmap(bitmap);
             }
         });
-
-
-
-
-
     }
 
     Cords getCordsOndeg(RectF circle, float Degs){ // 0-180 0 on oikeella 180 o vasemmalla

@@ -17,8 +17,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.util.Timer;
@@ -28,7 +30,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     private int width;
     private int height;
     float degs = 0;
-    float movment = (float)0.5;
+    float movment;
     Canvas canvas;
     ImageView gameview;
     Bitmap bitmap;
@@ -37,7 +39,12 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     Paint greenplanet;
     Paint characterPaint;
     Paint EnemyPaint;
+    Paint ScorePaint;
     RectF planet;
+    boolean jumping;
+    boolean falling;
+    int jumpHeight = 0;
+    Bitmap enemybitmap;
 
 
     @Override
@@ -79,6 +86,11 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         EnemyPaint.setColor(Color.CYAN);
         EnemyPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 
+        ScorePaint = new Paint();
+        ScorePaint.setColor(Color.RED);
+        ScorePaint.setStyle(Paint.Style.STROKE);
+        ScorePaint.setTextSize(40);
+
         // Make static items
 
 
@@ -89,7 +101,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
-        width = size.x + 150;
+        width = size.x;
         height = size.y;
 
 
@@ -109,24 +121,42 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         newView.setY(0);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(width, height);
         newView.setLayoutParams(layoutParams);
+
+        RelativeLayout relview = new RelativeLayout(this);
+        relview.setLayoutParams(layoutParams);
+        relview.addView(newView);
         gameview = newView;
 
         //gameview = (ImageView) findViewById(R.id.imageViewGame);
-        setContentView(gameview);
+        Button jump = new Button(this);
+        jump.setWidth((int) ( width/2));
+        jump.setHeight(height/4);
+        jump.setX(width/4);
+        jump.setY(height /4 *3);
+        jump.setText("!JUMP!");
+        relview.addView(jump);
+        setContentView(relview);
 
 
         // Draw empty field
         //bitmap = Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
-//        canvas = new Canvas(bitmap);
-//        canvas.drawRect(0,0,width,height,bluesky);
-//        planet = new RectF(0,height/2,width,height/2+width);
-//        canvas.drawArc(planet,180,180,true,greenplanet);
+        //canvas = new Canvas(bitmap);
+        //canvas.drawRect(0,0,width,height,bluesky);
+        //planet = new RectF(0,height/2,width,height/2+width);
+        //canvas.drawArc(planet,180,180,true,greenplanet);
 
         bitmapbackground = Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
         Canvas canvas2 = new Canvas(bitmapbackground);
         canvas2.drawRect(0,0,width,height,bluesky);
         planet = new RectF(0,height/2,width,height/2+width);
         canvas2.drawArc(planet,180,180,true,greenplanet);
+
+        // DRAW ENEMY AND MAKE MATRIX
+        // enemy
+
+        enemybitmap = Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
+        Canvas enemyccanvas = new Canvas(enemybitmap);
+        enemyccanvas.drawRect(0,0,100,100,EnemyPaint); // enemy
 
 
         // START TIMER
@@ -137,7 +167,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         timer.scheduleAtFixedRate(updateBall, 0, 1000/FPS);
 
         SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        Sensor vatupassisensor = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+        Sensor vatupassisensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (vatupassisensor == null) {
             // ei kiihtyvyysanturia
             Toast.makeText(this, "Paskaks män", Toast.LENGTH_SHORT).show();
@@ -147,14 +177,19 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         sensorManager.registerListener(this,vatupassisensor, SensorManager.SENSOR_DELAY_NORMAL);
 
 
-
+        jump.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                jumping = true;
+            }
+        });
 
 
     }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        
+        movment = sensorEvent.values[1];
     }
 
     @Override
@@ -169,17 +204,34 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
             drawMap();
 
-            if(degs < 180){
-                degs+=movment;
+            if( degs < 0 ){
+                degs = 179;
+            }else if(degs < 180){
+                degs+=movment/2;
             }else{
                 degs = 0;
             }
-
         }
     }
 
 
     void drawMap(){
+
+
+        if(jumping){
+            jumpHeight+=height/40;
+            if(jumpHeight > height/4) {
+                jumpHeight = 0;
+                jumping = false;
+                falling = true;
+            }
+        }else if(falling){
+            jumpHeight-=height/35;
+            if(jumpHeight < 0) {
+                jumpHeight = 0;
+                falling = false;
+            }
+        }
 
         bitmap = Bitmap.createBitmap(bitmapbackground);
         //bitmap = Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
@@ -187,11 +239,21 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         //canvas.setBitmap(bitmapbackground);
 
 
-        canvas.drawCircle(width/2,height/2,50,characterPaint); // player
+        canvas.drawCircle(width/2,height/2-jumpHeight,50,characterPaint); // player
 
         Cords cords = getCordsOndeg(planet,degs);
 
-        canvas.drawRect(cords.x-50,cords.y-50,cords.x+50,cords.y+50,EnemyPaint); // enemy
+
+        android.graphics.Matrix matrix = new android.graphics.Matrix();
+        matrix.postRotate(-degs,cords.x,cords.y);
+        matrix.preTranslate(cords.x-50,cords.y-50);
+        canvas.drawText(degs + "" , 100 , 100 ,ScorePaint);
+
+
+        canvas.drawBitmap(enemybitmap,matrix,EnemyPaint);
+        //canvas.drawRect(cords.x-50,cords.y-50,cords.x+50,cords.y+50,EnemyPaint); // enemy
+
+
 
 
         drawstuff();

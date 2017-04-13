@@ -88,8 +88,8 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
         ScorePaint = new Paint();
         ScorePaint.setColor(Color.RED);
-        ScorePaint.setStyle(Paint.Style.STROKE);
-        ScorePaint.setTextSize(40);
+        ScorePaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        ScorePaint.setTextSize(100);
 
         // Make static items
 
@@ -180,7 +180,10 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         jump.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                jumping = true;
+                if(!jumping && !falling){
+                    jumping = true;
+                }
+
             }
         });
 
@@ -214,29 +217,29 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-
-    void drawMap(){
-
-
+    void jump(){
         if(jumping){
-            jumpHeight+=height/40;
-            if(jumpHeight > height/4) {
-                jumpHeight = 0;
+            jumpHeight+=(height/3-jumpHeight)/2;
+            if(jumpHeight > height/3-10) {
                 jumping = false;
                 falling = true;
             }
         }else if(falling){
-            jumpHeight-=height/35;
+            jumpHeight-=height/40;
             if(jumpHeight < 0) {
                 jumpHeight = 0;
                 falling = false;
             }
         }
+    }
+// DRAWING THINGS EVERY SECOND
+    void drawMap(){
+        jump();
+
+
 
         bitmap = Bitmap.createBitmap(bitmapbackground);
-        //bitmap = Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
         canvas = new Canvas(bitmap);
-        //canvas.setBitmap(bitmapbackground);
 
 
         canvas.drawCircle(width/2,height/2-jumpHeight,50,characterPaint); // player
@@ -252,9 +255,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
         canvas.drawBitmap(enemybitmap,matrix,EnemyPaint);
         //canvas.drawRect(cords.x-50,cords.y-50,cords.x+50,cords.y+50,EnemyPaint); // enemy
-
-
-
+        //83 - 96
 
         drawstuff();
 

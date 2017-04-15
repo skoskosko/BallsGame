@@ -23,6 +23,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -30,6 +32,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     private int width;
     private int height;
     float degs = 0;
+    List<Float> enemeys =new ArrayList<Float>();
     float movment;
     Canvas canvas;
     ImageView gameview;
@@ -45,7 +48,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     boolean falling;
     int jumpHeight = 0;
     Bitmap enemybitmap;
-
+    int seconds = 0;
+    float speed = (float)0.5;
+    int points = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,7 +163,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         Canvas enemyccanvas = new Canvas(enemybitmap);
         enemyccanvas.drawRect(0,0,100,100,EnemyPaint); // enemy
 
-
+        enemeys.add((float)0);
         // START TIMER
 
         Timer timer = new Timer();
@@ -200,20 +205,43 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-
+int frames;
     class UpdateScreenTask extends TimerTask {
         public void run() {
             //calculate the new position of myBall
-
+               frames++;
+            if(frames == 30){
+                enemeys.add((float)0);
+                seconds++;
+                frames =0;
+            }
             drawMap();
 
-            if( degs < 0 ){
-                degs = 179;
-            }else if(degs < 180){
-                degs+=movment/2;
-            }else{
-                degs = 0;
+
+            //List<Object> toRemove = new ArrayList<Object>();
+            for (int index = 0; index < enemeys.size(); index++) {
+
+                if(enemeys.get(index) < 180){
+                    enemeys.set(index, enemeys.get(index)+movment*speed);
+
+                }else{
+                    points ++;
+                    enemeys.remove(index);
+                    //enemeys.set(index, Float.valueOf(0));
+                }
+
             }
+           // enemeys.removeAll(toRemove);
+
+
+
+//            if( degs < 0 ){
+//                degs = 179;
+//            }else if(degs < 180){
+//                degs+=movment*speed;
+//            }else{
+//                degs = 0;
+//            }
         }
     }
 
@@ -244,16 +272,24 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
         canvas.drawCircle(width/2,height/2-jumpHeight,50,characterPaint); // player
 
-        Cords cords = getCordsOndeg(planet,degs);
 
 
-        android.graphics.Matrix matrix = new android.graphics.Matrix();
-        matrix.postRotate(-degs,cords.x,cords.y);
-        matrix.preTranslate(cords.x-50,cords.y-50);
-        canvas.drawText(degs + "" , 100 , 100 ,ScorePaint);
+
+        for(float a: enemeys){
+            Cords cords = getCordsOndeg(planet,a);
+            android.graphics.Matrix matrix = new android.graphics.Matrix();
+
+            matrix.postRotate(-a,cords.x,cords.y);
+            matrix.preTranslate(cords.x-50,cords.y-50);
+            canvas.drawBitmap(enemybitmap,matrix,EnemyPaint);
 
 
-        canvas.drawBitmap(enemybitmap,matrix,EnemyPaint);
+            //toRemove.add(a);
+
+        }
+
+        canvas.drawText(points + "" , 100 , 100 ,ScorePaint);
+
         //canvas.drawRect(cords.x-50,cords.y-50,cords.x+50,cords.y+50,EnemyPaint); // enemy
         //83 - 96
 

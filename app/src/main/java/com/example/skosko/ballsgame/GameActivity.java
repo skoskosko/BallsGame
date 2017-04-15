@@ -51,6 +51,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     int seconds = 0;
     float speed = (float)0.5;
     int points = 0;
+    boolean running = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +89,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         characterPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 
         EnemyPaint = new Paint();
-        EnemyPaint.setColor(Color.CYAN);
+        EnemyPaint.setColor(Color.DKGRAY);
         EnemyPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 
         ScorePaint = new Paint();
@@ -106,7 +107,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
-        width = size.x;
+        width = size.x+150;
         height = size.y;
 
 
@@ -162,8 +163,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         enemybitmap = Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
         Canvas enemyccanvas = new Canvas(enemybitmap);
         enemyccanvas.drawRect(0,0,100,100,EnemyPaint); // enemy
-
-        enemeys.add((float)0);
+        
         // START TIMER
 
         Timer timer = new Timer();
@@ -209,11 +209,15 @@ int frames;
     class UpdateScreenTask extends TimerTask {
         public void run() {
             //calculate the new position of myBall
-               frames++;
-            if(frames == 30){
-                enemeys.add((float)0);
+            if (running) {
+            frames++;
+            if (frames == 30) {
+                if(seconds%4 == 0){
+                    enemeys.add((float) 0);
+                }
+
                 seconds++;
-                frames =0;
+                frames = 0;
             }
             drawMap();
 
@@ -221,27 +225,18 @@ int frames;
             //List<Object> toRemove = new ArrayList<Object>();
             for (int index = 0; index < enemeys.size(); index++) {
 
-                if(enemeys.get(index) < 180){
-                    enemeys.set(index, enemeys.get(index)+movment*speed);
+                if (enemeys.get(index) < 180) {
+                    enemeys.set(index, enemeys.get(index) + movment * speed);
 
-                }else{
-                    points ++;
+                } else {
+                    points++;
                     enemeys.remove(index);
                     //enemeys.set(index, Float.valueOf(0));
                 }
 
             }
-           // enemeys.removeAll(toRemove);
+        }
 
-
-
-//            if( degs < 0 ){
-//                degs = 179;
-//            }else if(degs < 180){
-//                degs+=movment*speed;
-//            }else{
-//                degs = 0;
-//            }
         }
     }
 
@@ -284,6 +279,8 @@ int frames;
             canvas.drawBitmap(enemybitmap,matrix,EnemyPaint);
 
 
+            calcballscoll(width/2,height/2-jumpHeight,cords.x-50,cords.y-50,25,50);
+
             //toRemove.add(a);
 
         }
@@ -297,7 +294,16 @@ int frames;
 
 
     }
+    void calcballscoll(float x1, float y1, float x2, float y2, float r1, float r2){
 
+        float thingy = (float)Math.sqrt(Math.pow((double)x2 - x1,(double)2) + Math.pow((double)y2 - y1,(double)2));
+        if(thingy < r1+r2){
+        running = false;
+
+        }
+
+
+    }
     void drawstuff(){
 
         GameActivity.this.runOnUiThread(new Runnable() {

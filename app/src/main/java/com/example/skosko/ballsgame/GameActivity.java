@@ -1,6 +1,7 @@
 package com.example.skosko.ballsgame;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,7 +12,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Build;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Display;
@@ -52,7 +53,9 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     float speed = (float)0.5;
     int points = 0;
     boolean running = true;
-
+    boolean jumsound = false;
+    Timer timer;
+    MediaPlayer jumpsoundmp;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,17 +66,17 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        if (Build.VERSION.SDK_INT >= 19) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        } else {
-            if (Build.VERSION.SDK_INT > 10) {
-                findViewById(android.R.id.content).setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
-            }
-        }
+//        if (Build.VERSION.SDK_INT >= 19) {
+//            getWindow().getDecorView().setSystemUiVisibility(
+//                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+//                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+//                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+//        } else {
+//            if (Build.VERSION.SDK_INT > 10) {
+//                findViewById(android.R.id.content).setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+//                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+//            }
+//        }
 
 //// SET PAINTS
         bluesky = new Paint();
@@ -107,7 +110,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
-        width = size.x+150;
+        width = size.x;
         height = size.y;
 
 
@@ -166,7 +169,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         
         // START TIMER
 
-        Timer timer = new Timer();
+        timer = new Timer();
         final int FPS = 30;
         TimerTask updateBall = new UpdateScreenTask();
         timer.scheduleAtFixedRate(updateBall, 0, 1000/FPS);
@@ -193,6 +196,14 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         });
 
 
+
+        jumpsoundmp = MediaPlayer.create(this, R.raw.klak);
+        float log1=(float)(Math.log(101-(SettingsValues.effectvolume))/Math.log(101));
+        jumpsoundmp.setVolume((float) .5, (float) .5);
+
+
+
+
     }
 
     @Override
@@ -205,17 +216,27 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-int frames;
+    int frames;
+    int total = 0 ;
+    int jokuluku = 120;
     class UpdateScreenTask extends TimerTask {
         public void run() {
             //calculate the new position of myBall
             if (running) {
             frames++;
-            if (frames == 30) {
-                if(seconds%4 == 0){
+            total++;
+                if(total%jokuluku == 0){
                     enemeys.add((float) 0);
                 }
 
+
+
+
+
+            if (frames == 30) {
+            if(jokuluku > 1){
+                jokuluku --;
+            }
                 seconds++;
                 frames = 0;
             }
@@ -235,13 +256,49 @@ int frames;
                 }
 
             }
-        }
+        }else{
+                timer.cancel();
+                killIt();
+
+
+
+            }
+
+
 
         }
     }
+void killIt()   {
+
+    GameActivity.this.runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+            //timer.purge();
+            Intent detailIntent = new Intent(getApplicationContext(), GameOverActivity.class);///////////////////
+            detailIntent.putExtra("points", points);
+            startActivity(detailIntent);
+            finish();
+        }
+    });
+
+
+
+
+
+
+
+}
+
 
     void jump(){
+
         if(jumping){
+            if(!jumsound){
+                jumsound = true;
+                jumpsoundmp.start();
+                System.out.println(Math.log(101-(SettingsValues.effectvolume))/Math.log(101));
+
+            }
             jumpHeight+=(height/3-jumpHeight)/2;
             if(jumpHeight > height/3-10) {
                 jumping = false;
@@ -252,6 +309,7 @@ int frames;
             if(jumpHeight < 0) {
                 jumpHeight = 0;
                 falling = false;
+                jumsound = false;
             }
         }
     }
@@ -279,7 +337,7 @@ int frames;
             canvas.drawBitmap(enemybitmap,matrix,EnemyPaint);
 
 
-            calcballscoll(width/2,height/2-jumpHeight,cords.x-50,cords.y-50,25,50);
+            calcballscoll(width/2,height/2-jumpHeight,cords.x,cords.y,50,50);
 
             //toRemove.add(a);
 
@@ -333,6 +391,37 @@ int frames;
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        timer.cancel();
+        Intent detailIntent = new Intent(getApplicationContext(), MainActivity.class);///////////////////
+        startActivity(detailIntent);
+        finish();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        //android.os.Process.killProcess(android.os.Process.myPid());
+
+        super.onDestroy();
+        if(bitmap!=null)
+        {
+            bitmap.recycle();
+            bitmap=null;
+        }
+        if(bitmapbackground!=null)
+        {
+            bitmapbackground.recycle();
+            bitmapbackground=null;
+        }
+        if(enemybitmap!=null)
+        {
+            enemybitmap.recycle();
+            enemybitmap=null;
+        }
+
+    }
 
 
 }

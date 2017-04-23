@@ -15,7 +15,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
+//comment
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
@@ -46,7 +46,44 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        highScores.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent highIntent = new Intent(getApplicationContext(), HighScores.class);
+
+                startActivity(highIntent);
+            }
+        });
+
+        settings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent highIntent = new Intent(getApplicationContext(), Settings.class);
+
+                startActivity(highIntent);
+            }
+        });
+
+
+
+
+
+
+
+
+
+
 
 
     }
+
+
+    @Override
+    public void onBackPressed() {
+        System.exit(0);
+    }
+
+
+
+
 }

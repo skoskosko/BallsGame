@@ -1,7 +1,6 @@
 package com.example.skosko.ballsgame;
 
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -32,17 +31,17 @@ public class HighScores extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        if (Build.VERSION.SDK_INT >= 19) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        } else {
-            if (Build.VERSION.SDK_INT > 10) {
-                findViewById(android.R.id.content).setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
-            }
-        }
+//        if (Build.VERSION.SDK_INT >= 19) {
+//            getWindow().getDecorView().setSystemUiVisibility(
+//                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+//                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+//                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+//        } else {
+//            if (Build.VERSION.SDK_INT > 10) {
+//                findViewById(android.R.id.content).setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+//                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+//            }
+//        }
 
 
 
@@ -103,15 +102,22 @@ public class HighScores extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent gameIntent = new Intent(getApplicationContext(), MainActivity.class);
+                gameIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(gameIntent);
                 finish();
             }
         });
+
+
+
+
+
     }
 
     @Override
     public void onBackPressed() {
         Intent gameIntent = new Intent(getApplicationContext(), MainActivity.class);
+        gameIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(gameIntent);
         finish();
     }

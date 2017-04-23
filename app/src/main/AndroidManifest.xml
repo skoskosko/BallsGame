@@ -7,6 +7,11 @@
     <meta-data
         android:name="com.google.android.gms.version"
         android:value="@integer/google_play_services_version" />
+    <receiver android:name=".MyBroadCastReviever">
+        <intent-filter>
+            <action android:name="android.intent.action.SCREEN_OFF"/>
+        </intent-filter>
+    </receiver>
 
     <application
         android:allowBackup="true"
@@ -33,6 +38,7 @@
             android:screenOrientation="landscape" />
         <activity
             android:name=".HighScores"
+            android:configChanges="keyboardHidden|orientation"
             android:screenOrientation="landscape" />
         <activity android:name=".Settings"
             android:screenOrientation="landscape"></activity>

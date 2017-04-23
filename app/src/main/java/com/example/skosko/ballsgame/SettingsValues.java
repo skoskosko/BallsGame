@@ -7,7 +7,7 @@ package com.example.skosko.ballsgame;
 public class SettingsValues {
     static int musicvolume = 100;
     static int effectvolume = 100;
-    static int volume = 100;
+    static boolean FUCKOFF = false;
 
 
 

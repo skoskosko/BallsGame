@@ -14,6 +14,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Display;
 import android.view.View;
@@ -56,9 +57,12 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     boolean jumsound = false;
     Timer timer;
     MediaPlayer jumpsoundmp;
+    MediaPlayer pointsoundmp;
+    MediaPlayer backroundmp;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SettingsValues.FUCKOFF = false;
         //setContentView(R.layout.activity_game);
 
 // SET WINDOW
@@ -138,6 +142,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
         //gameview = (ImageView) findViewById(R.id.imageViewGame);
         Button jump = new Button(this);
+        jump.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.basic_button));
         jump.setWidth((int) ( width/2));
         jump.setHeight(height/4);
         jump.setX(width/4);
@@ -195,13 +200,16 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-
-
-        jumpsoundmp = MediaPlayer.create(this, R.raw.klak);
+        pointsoundmp = MediaPlayer.create(this, R.raw.point);
+        jumpsoundmp = MediaPlayer.create(this, R.raw.jump);
+        backroundmp= MediaPlayer.create(this, R.raw.taide);
         float log1=(float)(Math.log(101-(SettingsValues.effectvolume))/Math.log(101));
-        jumpsoundmp.setVolume((float) .5, (float) .5);
-
-
+        float log2=(float)(Math.log(101-(SettingsValues.musicvolume))/Math.log(101));
+        jumpsoundmp.setVolume(1 -log1, 1- log1);
+        pointsoundmp.setVolume(1 -log1, 1- log1);
+        backroundmp.setVolume(1 -log2, 1- log2);
+        backroundmp.setLooping(true);
+        backroundmp.start();
 
 
     }
@@ -248,15 +256,16 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
 
                 if (enemeys.get(index) < 180) {
                     enemeys.set(index, enemeys.get(index) + movment * speed);
-
                 } else {
                     points++;
                     enemeys.remove(index);
+                    pointsoundmp.start();
                     //enemeys.set(index, Float.valueOf(0));
                 }
 
             }
         }else{
+
                 timer.cancel();
                 killIt();
 
@@ -342,8 +351,13 @@ void killIt()   {
             //toRemove.add(a);
 
         }
+        if(points  == 0){
+            canvas.drawText("Tilt to right!!!!!!!" , 100 , 100 ,ScorePaint);
+        }else{
+            canvas.drawText(points + "" , 100 , 100 ,ScorePaint);
 
-        canvas.drawText(points + "" , 100 , 100 ,ScorePaint);
+        }
+
 
         //canvas.drawRect(cords.x-50,cords.y-50,cords.x+50,cords.y+50,EnemyPaint); // enemy
         //83 - 96
@@ -394,7 +408,9 @@ void killIt()   {
     @Override
     public void onBackPressed() {
         timer.cancel();
+
         Intent detailIntent = new Intent(getApplicationContext(), MainActivity.class);///////////////////
+        detailIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(detailIntent);
         finish();
     }
@@ -403,7 +419,7 @@ void killIt()   {
     @Override
     protected void onDestroy() {
         //android.os.Process.killProcess(android.os.Process.myPid());
-
+        backroundmp.stop();
         super.onDestroy();
         if(bitmap!=null)
         {

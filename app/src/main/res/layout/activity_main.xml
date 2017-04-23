@@ -4,9 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/Backround"
     tools:context="com.example.skosko.ballsgame.MainActivity">
 
     <Button
+        android:background="@drawable/basic_button"
         android:id="@+id/buttonHighScore"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -21,6 +23,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
+        android:background="@drawable/basic_button"
         android:id="@+id/buttonStartGame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -33,6 +36,7 @@
         app:layout_constraintRight_toRightOf="parent" />
 
     <Button
+        android:background="@drawable/basic_button"
         android:id="@+id/buttonSettings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
